@@ -44,7 +44,7 @@ APP_NAME       = "Ekomonos"
 DEBUG_MODE     = False   # Set to True only for development. Controls debug logging.
 
 # ─── Integration Apps ────────────────────────────────────────────────────────
-TIKR_HARVEST_PATH = ROOT.parent / "tikr-harvest"
+TIKR_HARVEST_PATH = ROOT.parent.parent / "tikr-harvest"
 TIKR_PORT      = 3000
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────

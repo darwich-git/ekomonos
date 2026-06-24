@@ -4,12 +4,12 @@ import os
 import sys
 
 # Single source of truth for the database path resolved dynamically
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 try:
     from config import MAIN_DB
     db_path = str(MAIN_DB)
 except ImportError:
-    db_path = r"D:\01_PROJECT_CODE\EKKOMONOS\db\fortress_vault.db"
+    db_path = r"D:\01_PROJECT_CODE\EKKOMONOS\src\db\fortress_vault.db"
 
 def get_library_status():
     if not os.path.exists(db_path):
