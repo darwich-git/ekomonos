@@ -23,7 +23,7 @@ POMODORO_LOG   = LIBRARY_ROOT / "pomodoro_log.csv"
 LIBRARY_DB     = LIBRARY_ROOT / "library.db"
 
 # ─── Databases ───────────────────────────────────────────────────────────────
-DB_FOLDER      = ROOT / "db"
+DB_FOLDER      = ROOT.parent / "db"
 MAIN_DB        = DB_FOLDER / "fortress_vault.db"       # SQLAlchemy (primary)
 SPECIAL_DB     = DB_FOLDER / "special_situations.db"   # Legacy (to be merged)
 
@@ -43,7 +43,7 @@ APP_NAME       = "Ekomonos"
 DEBUG_MODE     = False   # Set to True only for development. Controls debug logging.
 
 # ─── Integration Apps ────────────────────────────────────────────────────────
-TIKR_HARVEST_PATH = ROOT / "tikr-harvest"
+TIKR_HARVEST_PATH = ROOT.parent / "tikr-harvest"
 TIKR_PORT      = 3000
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────

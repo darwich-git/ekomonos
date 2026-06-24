@@ -1,6 +1,7 @@
-APP_VERSION = "V.8.70.1"
+APP_VERSION = "V.8.71.1"
 __version__ = APP_VERSION
 APP_NAME = "Ekomonos"
-COMMENTS = "Service Layer Integration: Added rename_company to CompanyService, decoupled UI from CompaniesManager for renaming, and implemented robust unit tests verifying filesystem and database state updates."
+COMMENTS = "Reorganization Seiton: Relocated codebase (core, ui, assets, data) under src/ folder to strictly comply with 5S standards, unified agent rules under plural .agents/ with junction links in workspace, and purged legacy/redundant folders from the root."
+
 
 

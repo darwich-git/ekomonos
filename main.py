@@ -3,8 +3,8 @@ import os
 import traceback
 from datetime import datetime
 
-# Ensure project root is in path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Ensure src directory is in path
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
 
 from config import (
     APP_NAME, LIBRARY_ROOT, STOCK_PATH,
