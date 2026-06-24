@@ -359,3 +359,135 @@ class CompaniesManager:
             return False
         finally:
             conn.close()
+
+    def rename_company(self, old_ticker, new_ticker):
+        """
+        Renames a company's ticker across database and filesystem.
+        """
+        old_ticker = old_ticker.strip().upper()
+        new_ticker = new_ticker.strip().upper()
+        if old_ticker == new_ticker:
+            return True, "No change in ticker."
+            
+        # Check duplicate
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT ticker FROM companies WHERE ticker = ?", (new_ticker,))
+        if cursor.fetchone():
+            conn.close()
+            return False, f"Ticker {new_ticker} already exists in database."
+            
+        # Filesystem paths
+        from config import LIBRARY_ROOT
+        old_cloud_dir = os.path.join(str(LIBRARY_ROOT), "STOCK", old_ticker)
+        new_cloud_dir = os.path.join(str(LIBRARY_ROOT), "STOCK", new_ticker)
+        old_local_dir = os.path.join(r"D:\00_LOCAL_ARCHIVE_NO_SYNC\Ekomonos_Library\STOCK", old_ticker)
+        new_local_dir = os.path.join(r"D:\00_LOCAL_ARCHIVE_NO_SYNC\Ekomonos_Library\STOCK", new_ticker)
+        
+        # 1. Rename folder on disk
+        # First rename the local archive folder (where real files live)
+        if os.path.exists(old_local_dir):
+            try:
+                os.rename(old_local_dir, new_local_dir)
+            except Exception as e:
+                conn.close()
+                return False, f"Failed to rename local archive directory: {e}"
+                
+        # Second, rename cloud folder
+        if os.path.exists(old_cloud_dir):
+            # Delete old junction link inside cloud folder to prevent error during rename
+            junction_path = os.path.join(old_cloud_dir, "02_Fuentes_Inmutables")
+            if os.path.exists(junction_path):
+                try:
+                    # Since it is a junction, os.rmdir will delete the link without deleting contents
+                    os.rmdir(junction_path)
+                except Exception as e:
+                    # If failed, restore local directory name and abort
+                    if os.path.exists(new_local_dir):
+                        try: os.rename(new_local_dir, old_local_dir)
+                        except: pass
+                    conn.close()
+                    return False, f"Failed to remove old junction: {e}"
+            
+            try:
+                # Rename the subfolders that contain the ticker name (backward compatibility / legacy)
+                for sub in ["1 REPORTS", "2 TRANSCRIPTS", "3 EXCEL", "4 VARIOS"]:
+                    old_sub = os.path.join(old_cloud_dir, f"{sub} {old_ticker}")
+                    new_sub = os.path.join(old_cloud_dir, f"{sub} {new_ticker}")
+                    if os.path.exists(old_sub):
+                        os.rename(old_sub, new_sub)
+                
+                # Now rename the main cloud directory
+                os.rename(old_cloud_dir, new_cloud_dir)
+            except Exception as e:
+                # Restore old junction and local directory and abort
+                if os.path.exists(new_local_dir):
+                    try: os.rename(new_local_dir, old_local_dir)
+                    except: pass
+                conn.close()
+                return False, f"Failed to rename cloud directory: {e}"
+                
+            # Recreate junction under new cloud directory
+            new_junction_path = os.path.join(new_cloud_dir, "02_Fuentes_Inmutables")
+            new_local_base = os.path.join(new_local_dir, "02_Fuentes_Inmutables")
+            if os.path.exists(new_local_base):
+                import subprocess
+                subprocess.run(f'cmd /c mklink /J "{new_junction_path}" "{new_local_base}"', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                
+        # 2. Database updates
+        try:
+            # Table companies
+            cursor.execute("UPDATE companies SET ticker = ? WHERE ticker = ?", (new_ticker, old_ticker))
+            
+            # Table files: update ticker
+            cursor.execute("UPDATE files SET ticker = ? WHERE ticker = ?", (new_ticker, old_ticker))
+            
+            # Table files: update paths containing old_ticker
+            cursor.execute("SELECT id, path FROM files WHERE ticker = ?", (new_ticker,))
+            file_rows = cursor.fetchall()
+            for fid, path in file_rows:
+                if path:
+                    # Replace both backslashes and slashes to be safe
+                    new_path = path.replace(f"\\STOCK\\{old_ticker}\\", f"\\STOCK\\{new_ticker}\\")
+                    new_path = new_path.replace(f"/STOCK/{old_ticker}/", f"/STOCK/{new_ticker}/")
+                    # Also replace in the f" {old_ticker}" subfolders
+                    new_path = new_path.replace(f" REPORTS {old_ticker}", f" REPORTS {new_ticker}")
+                    new_path = new_path.replace(f" TRANSCRIPTS {old_ticker}", f" TRANSCRIPTS {new_ticker}")
+                    new_path = new_path.replace(f" EXCEL {old_ticker}", f" EXCEL {new_ticker}")
+                    new_path = new_path.replace(f" VARIOS {old_ticker}", f" VARIOS {new_ticker}")
+                    
+                    if new_path != path:
+                        cursor.execute("UPDATE files SET path = ? WHERE id = ?", (new_path, fid))
+                        
+            # Table special_situations: check if ticker exists in JSON array/object
+            cursor.execute("SELECT id, tickers FROM special_situations")
+            spec_rows = cursor.fetchall()
+            for sid, tickers_json in spec_rows:
+                if tickers_json:
+                    try:
+                        import json
+                        t_data = json.loads(tickers_json)
+                        changed = False
+                        if isinstance(t_data, list):
+                            for idx, val in enumerate(t_data):
+                                if val.strip().upper() == old_ticker:
+                                    t_data[idx] = new_ticker
+                                    changed = True
+                        elif isinstance(t_data, dict):
+                            for key, val in t_data.items():
+                                if val.strip().upper() == old_ticker:
+                                    t_data[key] = new_ticker
+                                    changed = True
+                        if changed:
+                            cursor.execute("UPDATE special_situations SET tickers = ? WHERE id = ?", (json.dumps(t_data), sid))
+                    except:
+                        pass
+                        
+            conn.commit()
+            conn.close()
+            return True, "Success"
+        except Exception as db_e:
+            if conn:
+                conn.rollback()
+                conn.close()
+            return False, f"Database update error: {db_e}"

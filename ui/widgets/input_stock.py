@@ -1711,8 +1711,7 @@ class InputStockWidget(QWidget):
         # Pre-fill
         dial.txt_name.setText(current_data.get("name", ""))
         dial.txt_ticker.setText(current_data.get("ticker", ticker))
-        dial.txt_ticker.setReadOnly(True) 
-        dial.txt_ticker.setStyleSheet(f"background-color: {COLORS['surface']}; color: {COLORS['text_dim']}; border: 1px solid {COLORS['border']};")
+        dial.txt_ticker.setReadOnly(False)
         
         # Activate Delete Mode
         dial.enable_delete_mode(ticker)
@@ -1820,6 +1819,19 @@ class InputStockWidget(QWidget):
         blackbox.log(f"Executing process_edit_save for {ticker}")
         try:
             # --- VALIDATION (Edit Mode) ---
+            new_ticker = new_data.get('ticker', ticker).strip().upper()
+            old_ticker = ticker.strip().upper()
+            
+            if new_ticker != old_ticker:
+                # Call rename_company!
+                success, err_msg = self.companies_manager.rename_company(old_ticker, new_ticker)
+                if not success:
+                    QMessageBox.critical(None, "Rename Error", f"Could not rename company ticker:\n{err_msg}")
+                    return
+                # Update variables for subsequent save logic
+                ticker = new_ticker
+                info_path = info_path.replace(f"\\STOCK\\{old_ticker}", f"\\STOCK\\{new_ticker}").replace(f"/STOCK/{old_ticker}", f"/STOCK/{new_ticker}")
+
             new_exchange = new_data.get('exchange', '')
             yahoo_ticker_edit = price_fetcher.get_yahoo_ticker(ticker, new_exchange)
             
@@ -1910,10 +1922,26 @@ class InputStockWidget(QWidget):
         blackbox.log(f"safe_refresh called for {ticker}")
         try:
             if not sip.isdeleted(self):
+                # Refresh list so combo box has the updated list of companies
+                self.refresh_company_list()
+                
+                # Set selection to the new ticker
+                if hasattr(self, 'header_widget') and not sip.isdeleted(self.header_widget):
+                    combo = self.header_widget.combo_companies
+                    idx = combo.findData(ticker)
+                    if idx >= 0:
+                        combo.blockSignals(True)
+                        combo.setCurrentIndex(idx)
+                        combo.blockSignals(False)
+                
                 self.on_company_changed(ticker)
                 
                 # Notify Global (e.g. Companies View needs to know Currency changed)
                 self.company_updated.emit(ticker)
+                
+                # Notify AppState that active company has changed
+                from ui.app_state import AppState
+                AppState.get().set_active_company(ticker)
                 
         except Exception as e:
             blackbox.error(f"Error in safe_refresh: {e}")

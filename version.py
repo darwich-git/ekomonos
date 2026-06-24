@@ -1,5 +1,5 @@
-APP_VERSION = "V.8.67.1"
+APP_VERSION = "V.8.68.1"
 __version__ = APP_VERSION
 APP_NAME = "Ekomonos"
-COMMENTS = "Audit Fix: 7 bugs resolved — context menu double exec, Q4 missing, year 2026, Document interface, search restore, dropdown options, extension stripping."
+COMMENTS = "Fixes: resolved React state race condition/infinite loop in Tikr Harvest frontend and implemented secure company ticker renaming in Ekomonos backend."
 
