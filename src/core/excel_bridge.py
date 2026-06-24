@@ -5,6 +5,7 @@ import datetime
 from core.database import MonthlySnapshot, AccountBalance, IncomeRecord, Account, DB_PATH
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from config import MASTER_BALANCE_PATH
 
 def map_month_id_to_es_str(month_id):
     # '2026-01' -> 'Enero/26'
@@ -41,7 +42,7 @@ def export_snapshot_to_master(snapshot_id):
     inc_cris = session.query(IncomeRecord).filter_by(month_id=snap.month_id, owner="Cris").first()
     
     # 1. Load Excel
-    file_path = "Master_Balance.xlsx"
+    file_path = str(MASTER_BALANCE_PATH)
     try:
         wb = openpyxl.load_workbook(file_path)
     except Exception as e:

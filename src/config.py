@@ -21,9 +21,10 @@ STOCK_PATH     = LIBRARY_ROOT / "STOCK"
 SPECIAL_PATH   = LIBRARY_ROOT / "SPECIAL"
 POMODORO_LOG   = LIBRARY_ROOT / "pomodoro_log.csv"
 LIBRARY_DB     = LIBRARY_ROOT / "library.db"
+MASTER_BALANCE_PATH = ROOT.parent / "Master_Balance.xlsx"
 
 # ─── Databases ───────────────────────────────────────────────────────────────
-DB_FOLDER      = ROOT.parent / "db"
+DB_FOLDER      = ROOT / "db"
 MAIN_DB        = DB_FOLDER / "fortress_vault.db"       # SQLAlchemy (primary)
 SPECIAL_DB     = DB_FOLDER / "special_situations.db"   # Legacy (to be merged)
 

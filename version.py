@@ -1,7 +1,8 @@
-APP_VERSION = "V.8.71.1"
+APP_VERSION = "V.8.72.1"
 __version__ = APP_VERSION
 APP_NAME = "Ekomonos"
-COMMENTS = "Reorganization Seiton: Relocated codebase (core, ui, assets, data) under src/ folder to strictly comply with 5S standards, unified agent rules under plural .agents/ with junction links in workspace, and purged legacy/redundant folders from the root."
+COMMENTS = "Reorganization Seiton: Rehoused active databases (db/) and runtime logs (logs/) inside the src/ directory, and mapped the Master_Balance.xlsx path configuration in config.py to avoid hardcoding."
+
 
 
 
