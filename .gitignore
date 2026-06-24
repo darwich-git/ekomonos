@@ -1,0 +1,47 @@
+# Entorno virtual y Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+
+# Archivos de Datos Privados (P1/P2/P3)
+.env
+*.db
+*.xlsx
+*.xlsm
+Backups/
+TrashBin/
+logs/
+Ekomonos Library/
+
+# Logs de depuración de Ekomonos
+*.log
+*.txt
+blackbox_crash.log
+crash_debug.log
+crash_log.txt
+debug_docs.log
+debug_view_v3.txt
+
+# Ejecutables y binarios
+AutoHotkey.exe
+
+# IDEs
+.vscode/
+.idea/
+
+# Repositorios independientes
+tikr-harvest/

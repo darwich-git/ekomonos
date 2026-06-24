@@ -1,0 +1,27 @@
+{
+    "types": {
+        "REP": "Reporte Principal (10-K, 10-Q, Annual, Interim)",
+        "MDA": "Management Discussion & Analysis (Si va separado)",
+        "AIF": "Annual Info Form (Canada/Regulatory)",
+        "PROXY": "Proxy Statement / DEF 14A (Incentivos y Directiva)",
+        "LET": "Letter to Shareholders (Carta del CEO)",
+        "TRANS": "Transcript (Conference Call Q&A)",
+        "PRES": "Investor Presentation (Slides)",
+        "PR": "Press Release (Earnings/News)",
+        "EVT": "Evento Relevante (8-K, M&A, Material Change)",
+        "PROS": "Prospectus (S-1, IPO, Spin-off doc)",
+        "EXT": "External Research (Credit Ratings, Short Reports, Competitor Analysis)",
+        "NOT": "Mis Notas / Journal",
+        "EXCEL": "Modelo de Valoración",
+        "THESIS": "Investment Thesis (Nota Final)"
+    },
+    "periods": {
+        "FY": "Fiscal Year (Anual)",
+        "Q1": "Overview Q1",
+        "Q2": "Overview Q2",
+        "Q3": "Overview Q3",
+        "Q4": "Overview Q4",
+        "HY": "Half-Year (Semestral)",
+        "NA": "No Aplica"
+    }
+}
