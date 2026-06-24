@@ -1824,7 +1824,8 @@ class InputStockWidget(QWidget):
             
             if new_ticker != old_ticker:
                 # Call rename_company!
-                success, err_msg = self.companies_manager.rename_company(old_ticker, new_ticker)
+                from core.services.company_service import CompanyService
+                success, err_msg = CompanyService().rename_company(old_ticker, new_ticker)
                 if not success:
                     QMessageBox.critical(None, "Rename Error", f"Could not rename company ticker:\n{err_msg}")
                     return

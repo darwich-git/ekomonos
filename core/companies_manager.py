@@ -384,31 +384,35 @@ class CompaniesManager:
         old_local_dir = os.path.join(r"D:\00_LOCAL_ARCHIVE_NO_SYNC\Ekomonos_Library\STOCK", old_ticker)
         new_local_dir = os.path.join(r"D:\00_LOCAL_ARCHIVE_NO_SYNC\Ekomonos_Library\STOCK", new_ticker)
         
-        # 1. Rename folder on disk
+        # 1. Delete old junction link inside cloud folder first (if it exists) to prevent conflicts
+        if os.path.exists(old_cloud_dir):
+            junction_path = os.path.join(old_cloud_dir, "02_Fuentes_Inmutables")
+            if os.path.lexists(junction_path):
+                try:
+                    # Since it is a junction, os.rmdir will delete the link without deleting contents
+                    os.rmdir(junction_path)
+                except Exception as e:
+                    conn.close()
+                    return False, f"Failed to remove old junction: {e}"
+
+        # 2. Rename folder on disk
         # First rename the local archive folder (where real files live)
         if os.path.exists(old_local_dir):
             try:
                 os.rename(old_local_dir, new_local_dir)
             except Exception as e:
+                # Restore old junction if deleted and abort
+                if os.path.exists(old_cloud_dir):
+                    old_junction_path = os.path.join(old_cloud_dir, "02_Fuentes_Inmutables")
+                    old_local_base = os.path.join(old_local_dir, "02_Fuentes_Inmutables")
+                    if os.path.exists(old_local_base):
+                        import subprocess
+                        subprocess.run(f'cmd /c mklink /J "{old_junction_path}" "{old_local_base}"', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 conn.close()
                 return False, f"Failed to rename local archive directory: {e}"
                 
         # Second, rename cloud folder
         if os.path.exists(old_cloud_dir):
-            # Delete old junction link inside cloud folder to prevent error during rename
-            junction_path = os.path.join(old_cloud_dir, "02_Fuentes_Inmutables")
-            if os.path.exists(junction_path):
-                try:
-                    # Since it is a junction, os.rmdir will delete the link without deleting contents
-                    os.rmdir(junction_path)
-                except Exception as e:
-                    # If failed, restore local directory name and abort
-                    if os.path.exists(new_local_dir):
-                        try: os.rename(new_local_dir, old_local_dir)
-                        except: pass
-                    conn.close()
-                    return False, f"Failed to remove old junction: {e}"
-            
             try:
                 # Rename the subfolders that contain the ticker name (backward compatibility / legacy)
                 for sub in ["1 REPORTS", "2 TRANSCRIPTS", "3 EXCEL", "4 VARIOS"]:
@@ -420,10 +424,16 @@ class CompaniesManager:
                 # Now rename the main cloud directory
                 os.rename(old_cloud_dir, new_cloud_dir)
             except Exception as e:
-                # Restore old junction and local directory and abort
+                # Restore old local directory and old junction and abort
                 if os.path.exists(new_local_dir):
                     try: os.rename(new_local_dir, old_local_dir)
                     except: pass
+                if os.path.exists(old_cloud_dir):
+                    old_junction_path = os.path.join(old_cloud_dir, "02_Fuentes_Inmutables")
+                    old_local_base = os.path.join(old_local_dir, "02_Fuentes_Inmutables")
+                    if os.path.exists(old_local_base):
+                        import subprocess
+                        subprocess.run(f'cmd /c mklink /J "{old_junction_path}" "{old_local_base}"', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 conn.close()
                 return False, f"Failed to rename cloud directory: {e}"
                 
@@ -432,7 +442,9 @@ class CompaniesManager:
             new_local_base = os.path.join(new_local_dir, "02_Fuentes_Inmutables")
             if os.path.exists(new_local_base):
                 import subprocess
-                subprocess.run(f'cmd /c mklink /J "{new_junction_path}" "{new_local_base}"', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                res = subprocess.run(f'cmd /c mklink /J "{new_junction_path}" "{new_local_base}"', shell=True, capture_output=True, text=True)
+                if res.returncode != 0:
+                    print(f"[CompaniesManager] mklink failed: {res.stderr.strip()} (cmd: cmd /c mklink /J \"{new_junction_path}\" \"{new_local_base}\")")
                 
         # 2. Database updates
         try:
@@ -448,8 +460,8 @@ class CompaniesManager:
             for fid, path in file_rows:
                 if path:
                     # Replace both backslashes and slashes to be safe
-                    new_path = path.replace(f"\\STOCK\\{old_ticker}\\", f"\\STOCK\\{new_ticker}\\")
-                    new_path = new_path.replace(f"/STOCK/{old_ticker}/", f"/STOCK/{new_ticker}/")
+                    new_path = path.replace(f"STOCK\\{old_ticker}\\", f"STOCK\\{new_ticker}\\")
+                    new_path = new_path.replace(f"STOCK/{old_ticker}/", f"STOCK/{new_ticker}/")
                     # Also replace in the f" {old_ticker}" subfolders
                     new_path = new_path.replace(f" REPORTS {old_ticker}", f" REPORTS {new_ticker}")
                     new_path = new_path.replace(f" TRANSCRIPTS {old_ticker}", f" TRANSCRIPTS {new_ticker}")

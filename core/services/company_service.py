@@ -143,3 +143,17 @@ class CompanyService:
         except Exception as e:
             print(f"[CompanyService] Sync error: {e}")
             return False
+
+    # ── Rename ───────────────────────────────────────────────────────────────
+
+    def rename_company(self, old_ticker: str, new_ticker: str) -> tuple[bool, str]:
+        """
+        Rename a company's ticker across database and filesystem.
+        Returns (success, message).
+        """
+        try:
+            return self._mgr.rename_company(old_ticker, new_ticker)
+        except Exception as e:
+            print(f"[CompanyService] Rename error from {old_ticker} to {new_ticker}: {e}")
+            return False, str(e)
+
