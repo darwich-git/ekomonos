@@ -1,5 +1,5 @@
-APP_VERSION = "V.8.68.1"
+APP_VERSION = "V.8.69.1"
 __version__ = APP_VERSION
 APP_NAME = "Ekomonos"
-COMMENTS = "Fixes: resolved React state race condition/infinite loop in Tikr Harvest frontend and implemented secure company ticker renaming in Ekomonos backend."
+COMMENTS = "Reorganization Fase 2: Cleaned up root directory by removing obsolete AutoHotkey binaries and dead vault databases, and moved checkpoint documentation to the docs/ folder."
 
