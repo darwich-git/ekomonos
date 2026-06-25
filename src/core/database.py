@@ -29,30 +29,41 @@ class Company(Base):
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="To Research") # To Research, In Progress, Done
     
+    # Extra columns from SQLite physical schema
+    category: Mapped[str] = mapped_column(String(50), default="Watchlist")
+    currency: Mapped[str] = mapped_column(String(10), default="USD")
+    shares_count: Mapped[int] = mapped_column(Integer, default=0)
+    cost_basis: Mapped[float] = mapped_column(Float, default=0.0)
+    fair_value: Mapped[float] = mapped_column(Float, default=0.0)
+    potential_5y: Mapped[float] = mapped_column(Float, default=0.0)
+    last_price: Mapped[float] = mapped_column(Float, default=0.0)
+    last_update: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    metric_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    next_presentation: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    primary_exchange: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    
     # Relationships
-    documents: Mapped[List["Document"]] = relationship(back_populates="company", cascade="all, delete-orphan")
     time_logs: Mapped[List["TimeLog"]] = relationship(back_populates="company", cascade="all, delete-orphan")
     calendar_events: Mapped[List["CalendarEvent"]] = relationship(back_populates="company", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Company(ticker='{self.ticker}', name='{self.name}')>"
 
-class Document(Base):
-    __tablename__ = "documents"
+class File(Base):
+    __tablename__ = "files"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"))
-    
-    filename: Mapped[str] = mapped_column(String(255))
-    file_path: Mapped[str] = mapped_column(String(1024), unique=True) # Absolute or relative path in Vault
-    doc_type: Mapped[str] = mapped_column(String(50)) # e.g., 'EarningsCall', '10K', '10Q'
-    year: Mapped[int] = mapped_column(Integer)
-    quarter: Mapped[Optional[str]] = mapped_column(String(10), nullable=True) # Q1, Q2, Q3, Q4, FY
-    
-    last_accessed: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    
-    # Relationships
-    company: Mapped["Company"] = relationship(back_populates="documents")
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    path: Mapped[str] = mapped_column(String(1024), unique=True, index=True)
+    ticker: Mapped[Optional[str]] = mapped_column(String(10), index=True, nullable=True)
+    category: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    year: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    quarter: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    status: Mapped[int] = mapped_column(Integer, default=0) # 0=New, 1=In Process, 2=Reviewed
+    language: Mapped[str] = mapped_column(String(10), default="EN")
+    notes_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    last_page_read: Mapped[int] = mapped_column(Integer, default=0)
+    last_accessed: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
 
 class TimeLog(Base):
     __tablename__ = "time_logs"
@@ -248,10 +259,13 @@ class IncomeRecord(Base):
     
     # --- Database Initialization ---
 
+_session_factory = None
+
 def init_db(db_path: str = DB_PATH):
     """Initializes the database and creates tables.
     Uses config.MAIN_DB by default. Accepts optional override for testing.
     """
+    global _session_factory
     # Ensure the db/ folder exists
     path = db_path if db_path != DB_PATH else str(MAIN_DB)
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
@@ -266,10 +280,18 @@ def init_db(db_path: str = DB_PATH):
         cursor.close()
 
     Base.metadata.create_all(engine)
+    _session_factory = sessionmaker(bind=engine)
     return engine
 
 def get_session_factory(engine: Engine):
     return sessionmaker(bind=engine)
+
+def get_session():
+    """Get a new SQLAlchemy session using the global factory."""
+    global _session_factory
+    if _session_factory is None:
+        init_db()
+    return _session_factory()
 
 if __name__ == "__main__":
     print(f"Initializing database at {DB_PATH}...")

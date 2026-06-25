@@ -477,7 +477,6 @@ class NewCompanyDialog(QDialog):
             import os
             import json
             import shutil
-            import sqlite3
             import datetime
             import traceback
 
@@ -599,28 +598,19 @@ class NewCompanyDialog(QDialog):
                      shutil.copy2(src, dest)
                  except: pass
 
-            # Insert into DB (Logic Restored)
-            db_path = getattr(self.companies_manager, 'db_path', None)
-            if not db_path:
-                 db_path = os.path.join(LIBRARY_ROOT, "library.db")
-
-            conn = sqlite3.connect(db_path)
-            cursor = conn.cursor()
-            
-            # Upsert
-            cursor.execute("""
-                INSERT OR REPLACE INTO companies (
-                    ticker, name, category, currency, primary_exchange, 
-                    yahoo_ticker, aliases, notes, status, last_update
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                ticker, data['name'], data['category'], data['currency'], 
-                data['exchange'], data['yahoo_ticker'], data['aliases'], 
-                f"Idea: {data.get('idea_source','')}", 'To Research',
-                datetime.datetime.now().strftime("%Y-%m-%d")
-            ))
-            conn.commit()
-            conn.close()
+            # Insert into DB (Refactored to SQLAlchemy Manager)
+            self.companies_manager.add_company(
+                ticker=ticker,
+                name=data['name'],
+                category=data['category'],
+                currency=data['currency'],
+                primary_exchange=data['exchange'],
+                yahoo_ticker=data['yahoo_ticker'],
+                aliases=data['aliases'],
+                notes=f"Idea: {data.get('idea_source','')}",
+                status='To Research',
+                last_update=datetime.datetime.now().strftime("%Y-%m-%d")
+            )
             
             # Update Manager Cache
             # self.companies_manager.sync_with_library() 

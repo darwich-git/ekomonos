@@ -1,10 +1,8 @@
 import openpyxl
-import sqlite3
 import pandas as pd
 import datetime
 from core.database import MonthlySnapshot, AccountBalance, IncomeRecord, Account, DB_PATH
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from config import MASTER_BALANCE_PATH
 
 def map_month_id_to_es_str(month_id):
@@ -28,9 +26,8 @@ def safe_float(val):
     except: return 0.0
 
 def export_snapshot_to_master(snapshot_id):
-    engine = create_engine(f"sqlite:///{DB_PATH}")
-    Session = sessionmaker(bind=engine)
-    session = Session()
+    from core.database import get_session
+    session = get_session()
     
     snap = session.query(MonthlySnapshot).get(snapshot_id)
     if not snap:
