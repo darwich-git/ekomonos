@@ -213,6 +213,14 @@ class WheelEventFilter(QObject):
         return super().eventFilter(obj, event)
 
 def main():
+    if sys.platform == 'win32':
+        try:
+            import ctypes
+            myappid = 'darwich.ekomonos.app.v1'
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+        except Exception as e:
+            print(f"Failed to set AppUserModelID: {e}")
+
     ensure_dirs()  # Make sure all required directories exist
     app = QApplication(sys.argv)
 
