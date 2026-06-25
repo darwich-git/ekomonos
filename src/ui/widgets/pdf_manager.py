@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit,
                              QSplitter, QHeaderView, QLabel, QMessageBox, QPushButton, 
                              QCheckBox, QDialog, QTextEdit, QProgressBar, QButtonGroup, QFrame, 
                              QRadioButton, QComboBox, QMenu, QGridLayout, QDoubleSpinBox, QDateEdit, QCompleter)
-from PyQt6.QtCore import Qt, QSize, QDate, pyqtSignal
+from PyQt6.QtCore import Qt, QSize, QDate, pyqtSignal, QThread
 from PyQt6.QtGui import QIcon, QColor, QFont, QLinearGradient, QBrush, QAction
 import os
 import re
@@ -525,6 +525,157 @@ class CompanyHeaderWidget(QWidget):
 
 
 
+class LibraryScanWorker(QThread):
+    finished_signal = pyqtSignal(dict, list)
+
+    def __init__(self, portfolio_path):
+        super().__init__()
+        self.portfolio_path = portfolio_path
+
+    def run(self):
+        try:
+            import os
+            import re
+            
+            library_data = {}
+            all_files_flat = []
+
+            if not os.path.exists(self.portfolio_path):
+                self.finished_signal.emit({}, [])
+                return
+
+            for item in os.listdir(self.portfolio_path):
+                company_path = os.path.join(self.portfolio_path, item)
+                if os.path.isdir(company_path):
+                    ticker = item
+                    library_data[ticker] = {}
+                    
+                    for root, dirs, files in os.walk(company_path):
+                        for f in files:
+                            if f.lower().endswith(('.pdf', '.xlsx', '.xlsm', '.txt')):
+                                full_path = os.path.join(root, f)
+                                
+                                year = "Uncategorized"
+                                category = "Varios"
+                                language = "EN"
+                                period = "NA"
+                                clean_name = f
+                                date_str = ""
+
+                                parent_folder = os.path.basename(root)
+                                is_reports_folder = False
+                                if "1 REPORTS" in parent_folder or "1 REPORTS" in root or "02.01_Reportes" in parent_folder or "02.01_Reportes" in root:
+                                    category = "Annual Reports" 
+                                    is_reports_folder = True
+                                elif "2 TRANSCRIPTS" in parent_folder or "2 TRANSCRIPTS" in root or "02.02_Transcripciones" in parent_folder or "02.02_Transcripciones" in root:
+                                    category = "Transcript"
+                                elif "3 EXCEL" in parent_folder or "3 EXCEL" in root or "03_Modelos_y_Datos" in parent_folder or "03_Modelos_y_Datos" in root:
+                                    category = "Excel"
+                                elif "4 VARIOS" in parent_folder or "4 VARIOS" in root or "02.03_Articulos_y_Prensa" in parent_folder or "02.03_Articulos_y_Prensa" in root:
+                                    category = "Varios"
+
+                                parts = f.split('_')
+                                is_structured = False
+                                if len(parts) >= 5:
+                                    first_part_is_date = bool(re.match(r'^\d{4}-\d{2}-\d{2}$', parts[0]))
+                                    last_part = os.path.splitext(parts[-1])[0]
+                                    last_part_is_date = bool(re.match(r'^\d{4}-\d{2}-\d{2}$', last_part))
+                                    if first_part_is_date and last_part_is_date:
+                                        is_structured = True
+
+                                if is_structured:
+                                    date_str = parts[0]
+                                    year = date_str[:4]
+                                    language = parts[-2].upper()
+                                    form_name = parts[-3]
+                                    clean_title = "_".join(parts[1:-3])
+                                    ext = os.path.splitext(f)[1]
+                                    clean_name = clean_title + ext
+
+                                    form_lower = form_name.lower()
+                                    if "full year" in form_lower or "10-k" in form_lower or "20-f" in form_lower or "40-f" in form_lower or "annual" in form_lower:
+                                        period = "FY"
+                                    elif "interim h1" in form_lower or "h1" in form_lower or "half year" in form_lower or "half-year" in form_lower or "first half" in form_lower:
+                                        period = "H1"
+                                    elif "interim h2" in form_lower or "h2" in form_lower or "second half" in form_lower:
+                                        period = "H2"
+                                    elif "interim q1" in form_lower or "q1" in form_lower:
+                                        period = "Q1"
+                                    elif "interim q2" in form_lower or "q2" in form_lower:
+                                        period = "Q2"
+                                    elif "interim q3" in form_lower or "q3" in form_lower:
+                                        period = "Q3"
+                                    elif "interim q4" in form_lower or "q4" in form_lower:
+                                        period = "Q4"
+                                    elif "quarterly" in form_lower or "10-q" in form_lower or "6-k" in form_lower:
+                                        month = date_str[5:7]
+                                        if month == "03":
+                                            period = "Q1"
+                                        elif month == "06":
+                                            period = "Q2"
+                                        elif month == "09":
+                                            period = "Q3"
+                                        elif month == "12":
+                                            period = "FY"
+                                        else:
+                                            period = "NA"
+                                    else:
+                                        period = "NA"
+                                        
+                                    if is_reports_folder:
+                                        category = "Annual Reports" if period == "FY" else "Reportes"
+                                else:
+                                    fname_lower = f.lower()
+                                    date_match = re.search(r'^(\d{4}-\d{2}-\d{2})', f)
+                                    if date_match:
+                                        date_str = date_match.group(1)
+                                        clean_name = f[len(date_str):].lstrip(" _-")
+                                        year = date_str[:4]
+                                    else:
+                                        year_match = re.search(r'(20\d{2})', f)
+                                        if year_match:
+                                            year = year_match.group(1)
+                                        date_str = year
+                                    
+                                    if is_reports_folder:
+                                        if "full_year" in fname_lower or "annual report" in fname_lower or "10-k" in fname_lower:
+                                            category = "Annual Reports"
+                                        else:
+                                            category = "Reportes"
+                                    elif category == "Varios":
+                                        if fname_lower.endswith('.xls') or fname_lower.endswith('.xlsx') or fname_lower.endswith('.xlsm'):
+                                            category = "Excel"
+                                        elif "full_year" in fname_lower or "annual report" in fname_lower:
+                                            category = "Annual Reports"
+                                        elif any(x in fname_lower for x in ["interim", "q1", "q2", "q3", "q4", "earning", "hy", "_rep", "-rep"]):
+                                            category = "Reportes"
+                                        elif "transcript" in fname_lower:
+                                            category = "Transcript"
+                                        elif "tesis" in fname_lower or "thesis" in fname_lower:
+                                            category = "Tesis"
+                                        elif any(x in fname_lower for x in ["notice", "press release"]):
+                                            category = "Varios"
+
+                                    if " es " in fname_lower or "_es_" in fname_lower or "spanish" in fname_lower:
+                                        language = "ES"
+
+                                all_files_flat.append({
+                                    "ticker": ticker,
+                                    "name": clean_name,
+                                    "path": full_path,
+                                    "year": year,
+                                    "category": category,
+                                    "language": language,
+                                    "period": period,
+                                    "date": date_str
+                                })
+
+            self.finished_signal.emit(library_data, all_files_flat)
+        except Exception as e:
+            print(f"[LibraryScanWorker] Error: {e}")
+            self.finished_signal.emit({}, [])
+
+
 class PdfManagerWidget(QWidget):
     file_data_changed = pyqtSignal()  # Emitted when file status/category changes
 
@@ -726,19 +877,32 @@ class PdfManagerWidget(QWidget):
         if not os.path.exists(self.portfolio_path):
             return
 
-        # Scan Companies
-        # New Structure: STOCK/<TICKER>
-        for item in os.listdir(self.portfolio_path):
-            company_path = os.path.join(self.portfolio_path, item)
-            if os.path.isdir(company_path):
-                ticker = item # Folder name is ticker
-                self._scan_company_files(ticker, company_path)
+        # Show visual loading state on tree
+        loading_item = QTreeWidgetItem(self.tree)
+        loading_item.setText(0, "Cargando biblioteca...")
+        self.tree.setEnabled(False)
 
-        # Build Tree (Company Only)
-        for ticker in sorted(self.library_data.keys()):
-            ticker_item = QTreeWidgetItem(self.tree)
-            ticker_item.setText(0, ticker)
-            ticker_item.setData(0, Qt.ItemDataRole.UserRole, {"type": "company", "ticker": ticker})
+        # Launch background worker
+        self._scan_worker = LibraryScanWorker(self.portfolio_path)
+        self._scan_worker.finished_signal.connect(self._on_library_scanned)
+        self._scan_worker.start()
+
+    def _on_library_scanned(self, library_data, all_files_flat):
+        from PyQt6 import sip
+        if not sip.isdeleted(self):
+            self.tree.clear()
+            self.tree.setEnabled(True)
+            self.library_data = library_data
+            self.all_files_flat = all_files_flat
+
+            # Build Tree (Company Only)
+            for ticker in sorted(self.library_data.keys()):
+                ticker_item = QTreeWidgetItem(self.tree)
+                ticker_item.setText(0, ticker)
+                ticker_item.setData(0, Qt.ItemDataRole.UserRole, {"type": "company", "ticker": ticker})
+            
+            # Select first if available or refresh view
+            self.refresh_file_list()
 
     def _scan_company_files(self, ticker, path):
         # Clear existing data to avoid duplicates upon rescan

@@ -1,7 +1,7 @@
-APP_VERSION = "V.8.74"
+APP_VERSION = "V.8.75"
 __version__ = APP_VERSION
 APP_NAME = "Ekomonos"
-COMMENTS = "Feature: Consolidated the Service Layer (Pilar 2) and decoupled all PyQt6 UI components from Core Managers."
+COMMENTS = "Feature: Implemented background disk scanning and progress caching (Pilar 3) to eliminate UI stuttering."
 
 
 

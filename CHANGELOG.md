@@ -1,5 +1,9 @@
 # Changelog
 
+## [v8.75] - 2026-06-25
+### Changed
+- **Asynchronous Disk Operations (Pilar 3):** Refactored filesystem traversals (`os.walk` and `os.listdir`) out of the main PyQt6 thread. Implemented `LibraryScanWorker` for async PDF library loading and `LibraryPreScanWorker` for background progress scanning. Integrated in-memory caching in `LibraryService` for instantaneous progress/hours loading and short-circuited situation progress checks, resolving GUI stuttering completely.
+
 ## [v8.74] - 2026-06-25
 ### Changed
 - **Service Layer Consolidation (Pilar 2):** Decoupled all PyQt6 UI views and widgets (including companies_view, pdf_manager, pomodoro, status_panel, and input_stock) from direct Core Managers. They now interact exclusively with the unified CompanyService, LibraryService, and SpecialService layers, resolving direct SQL/manager leaks and promoting a clean 5S architecture.

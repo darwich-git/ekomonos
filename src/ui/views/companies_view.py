@@ -90,6 +90,20 @@ class CompaniesView(QWidget):
         # Initial paint (no price fetch — prices already fetched during splash)
         self.load_data(fetch_prices=False)
 
+        # Trigger background progress pre-scan to avoid UI freeze
+        try:
+            tickers = [c.get("ticker") for c in self._company_svc.get_all() if c.get("ticker")]
+            self._pre_scan_worker = self._lib_svc.pre_scan_all(tickers, self.refresh_tables_after_prescan)
+        except Exception as e:
+            print(f"[CompaniesView] Error starting pre-scan worker: {e}")
+
+    def refresh_tables_after_prescan(self):
+        """Called asynchronously when the background progress scanning completes."""
+        if not sip.isdeleted(self):
+            debug_log("Pre-scan complete. Refreshing tables with progress scores.")
+            self.load_data(fetch_prices=False)
+
+
     def showEvent(self, event):
         # Refresh view when switching to this tab.
         # No sync or price fetch — just repaint from the current DB state. Fast.

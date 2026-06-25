@@ -10,7 +10,7 @@ import datetime
 import re
 from ui.styles import COLORS
 from core.sne_manager import generate_sne_filename, get_sne_destination_folder, SNE_TYPES, SNE_PERIODS
-from core.services import CompanyService
+from core.services import CompanyService, LibraryService
 from core.price_fetcher import price_fetcher, EXCHANGE_SUFFIXES
 from core.database import init_db, get_session_factory, Company as DBCompany
 from core.earnings_manager import EarningsManager
@@ -611,6 +611,8 @@ class NewCompanyDialog(QDialog):
                 status='To Research',
                 last_update=datetime.datetime.now().strftime("%Y-%m-%d")
             )
+            # Invalidate Cache
+            LibraryService().invalidate_cache(ticker)
             
             # Update Manager Cache
             # self.companies_manager.sync_with_library() 
@@ -2042,6 +2044,8 @@ class InputStockWidget(QWidget):
             # Trigger Last Update Calculation (Live)
             new_date = self.companies_manager.calculate_last_update(ticker)
             self.companies_manager.update_company(ticker, last_update=new_date)
+            # Invalidate Cache
+            LibraryService().invalidate_cache(ticker)
             # Notify Header to reload companies? Or is it auto? 
             # Header reads from DB or memory? Usually CompaniesView reads DB.
             # We might need to refresh CompaniesView if it's visible.

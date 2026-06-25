@@ -39,8 +39,12 @@ def calculate_special_progress(data):
             safe_title = re.sub(r'[<>:"/\\|?*]', '_', title).strip()
             folder_path = os.path.join(SPECIAL_ROOT, safe_title)
             if os.path.exists(folder_path):
-                count = sum(len(files) for _, _, files in os.walk(folder_path))
-                if count > 0:
+                has_files = False
+                for _, _, files in os.walk(folder_path):
+                    if files:
+                        has_files = True
+                        break
+                if has_files:
                     score_files = 10.0
     except:
         pass
