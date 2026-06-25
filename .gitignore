@@ -45,3 +45,7 @@ AutoHotkey.exe
 
 # Repositorios independientes
 tikr-harvest/
+
+# Accesos directos locales
+*.lnk
+
