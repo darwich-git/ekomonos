@@ -66,7 +66,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle(f"EKKOMONOS {__version__} - Financial Dashboard")
-        self.setWindowIcon(QIcon(os.path.join(os.getcwd(), "assets", "desktop_icon.ico")))
+        self.setWindowIcon(QIcon(str(DESKTOP_ICON)))
         self.resize(1600, 900)
         self.setMinimumSize(1200, 800) # Allow shrinking for split-screen
         self._initial_pos_set = False

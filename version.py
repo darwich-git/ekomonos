@@ -1,7 +1,7 @@
-APP_VERSION = "V.8.72.3"
+APP_VERSION = "V.8.72.4"
 __version__ = APP_VERSION
 APP_NAME = "Ekomonos"
-COMMENTS = "Fix: Configurado AppUserModelID en Windows para corregir el icono de la barra de tareas de Ekomonos y reconfigurado el acceso directo (.lnk) con pythonw.exe para evitar que se abra la consola negra."
+COMMENTS = "Fix: Corregida ruta obsoleta del icono de la ventana principal en main_window.py para usar la constante centralizada DESKTOP_ICON, resolviendo el icono en blanco en la barra de tareas de Windows."
 
 
 
