@@ -1,5 +1,9 @@
 # Changelog
 
+## [v8.76] - 2026-06-25
+### Changed
+- **Excel Bridge Optimization (Pilar 4):** Shielded the writing mechanism of `excel_bridge.py` by implementing asynchronous background writes via `BaseWorker`. Integrated fault-tolerant text normalization (ignoring accents, punctuation, and extra spaces) to match rows robustly. Added a dedicated audit log `src/logs/excel_bridge.log` recording all matches and warnings.
+
 ## [v8.75] - 2026-06-25
 ### Changed
 - **Asynchronous Disk Operations (Pilar 3):** Refactored filesystem traversals (`os.walk` and `os.listdir`) out of the main PyQt6 thread. Implemented `LibraryScanWorker` for async PDF library loading and `LibraryPreScanWorker` for background progress scanning. Integrated in-memory caching in `LibraryService` for instantaneous progress/hours loading and short-circuited situation progress checks, resolving GUI stuttering completely.

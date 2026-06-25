@@ -463,6 +463,7 @@ class WealthAnalyticsWidget(QWidget):
         from core.database import DB_PATH, MonthlySnapshot
         from core.excel_bridge import export_snapshot_to_master
         from PyQt6.QtWidgets import QMessageBox
+        from core.workers.base_worker import BaseWorker
         
         try:
             engine = create_engine(f"sqlite:///{DB_PATH}")
@@ -475,12 +476,30 @@ class WealthAnalyticsWidget(QWidget):
                 QMessageBox.warning(self, "Excel Warning", "No hay datos para sincronizar.")
                 return
                 
-            if export_snapshot_to_master(snap.id):
-                QMessageBox.information(self, "Success", f"Datos copiados con éxito a Master_Balance.xlsx para {snap.month_id}")
-            else:
-                QMessageBox.warning(self, "Excel Warning", "No se pudo escribir en Master_Balance.xlsx. ¿Está abierto y puedes modificarlo?")
+            self.btn_sync.setEnabled(False)
+            self.btn_sync.setText("Sincronizando...")
+            
+            def on_success(result):
+                self.btn_sync.setEnabled(True)
+                self.btn_sync.setText("Sync Excel Master")
+                if result:
+                    QMessageBox.information(self, "Success", f"Datos copiados con éxito a Master_Balance.xlsx para {snap.month_id}")
+                else:
+                    QMessageBox.warning(self, "Excel Warning", "No se pudo escribir en Master_Balance.xlsx.\n¿Está abierto por Excel?\n\nConsulta src/logs/excel_bridge.log para más detalles.")
+
+            def on_error(err):
+                self.btn_sync.setEnabled(True)
+                self.btn_sync.setText("Sync Excel Master")
+                QMessageBox.critical(self, "Error", f"Fallo al sincronizar:\n{err}")
+
+            self._excel_worker = BaseWorker(export_snapshot_to_master, snap.id)
+            self._excel_worker.success.connect(on_success)
+            self._excel_worker.error.connect(on_error)
+            self._excel_worker.start()
+            
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Fallo al sincronizar: {str(e)}")
+            QMessageBox.critical(self, "Error", f"Fallo al iniciar sincronización: {str(e)}")
+
 
     def open_detail_view(self, category_id):
         self.current_category_id = category_id

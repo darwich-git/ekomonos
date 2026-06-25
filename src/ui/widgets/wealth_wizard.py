@@ -711,13 +711,26 @@ class WealthWizardDialog(QDialog):
                 shutil.copy2(DB_PATH, os.path.join(backup_dir, backup_name))
             except: pass
             
-            # Write to Excel Master
+            # Write to Excel Master (Asynchronously in background)
             try:
                 from core.excel_bridge import export_snapshot_to_master
-                if not export_snapshot_to_master(snap.id):
-                    QMessageBox.warning(self, "Excel Warning", "No se pudo escribir en Master_Balance.xlsx. ¿Está abierto?")
+                from core.workers.base_worker import BaseWorker
+                
+                def handle_excel_result(result):
+                    if not result:
+                        QMessageBox.warning(None, "Excel Warning", "No se pudo escribir en Master_Balance.xlsx.\n¿Está abierto por Excel?\n\nConsulta src/logs/excel_bridge.log para más detalles.")
+                
+                def handle_excel_error(err):
+                     print("Failed to use excel bridge in worker:", err)
+                     QMessageBox.critical(None, "Excel Error", f"Fallo al escribir en Excel Master:\n{err}")
+
+                self._excel_worker = BaseWorker(export_snapshot_to_master, snap.id)
+                self._excel_worker.success.connect(handle_excel_result)
+                self._excel_worker.error.connect(handle_excel_error)
+                self._excel_worker.start()
             except Exception as e:
-                print("Failed to use excel bridge:", e)
+                print("Failed to start excel bridge worker:", e)
+
                 
             return True
         except Exception as e:
