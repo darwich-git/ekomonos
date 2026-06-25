@@ -13,7 +13,7 @@ import winsound
 from config import LIBRARY_ROOT as _LIBRARY_ROOT_PATH
 LIBRARY_ROOT = str(_LIBRARY_ROOT_PATH)
 
-from core.special_manager import SpecialManager
+from core.services import CompanyService, SpecialService
 
 class CompanySelectionDialog(QDialog):
     def __init__(self, companies, situations=[], parent=None):
@@ -48,7 +48,7 @@ class CompanySelectionDialog(QDialog):
     def get_selected(self):
         return self.combo.currentData()
 
-from core.companies_manager import CompaniesManager
+
 
 class PomodoroWidget(QWidget):
     time_logged_signal = pyqtSignal(str) # Ticker or Title
@@ -56,8 +56,8 @@ class PomodoroWidget(QWidget):
     def __init__(self, portfolio_manager=None):
         super().__init__()
         self.portfolio_manager = portfolio_manager
-        self.special_manager = SpecialManager()
-        self.companies_manager = CompaniesManager(LIBRARY_ROOT) # Init locally for DB access
+        self.special_manager = SpecialService()
+        self.companies_manager = CompanyService()
         self.setStyleSheet(f"background-color: {COLORS['surface_light']}; border-radius: 8px; padding: 10px;")
         
         layout = QVBoxLayout(self)

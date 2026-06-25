@@ -175,3 +175,45 @@ class SpecialService:
             return self._mgr.get_total_hours(situation_id)
         except Exception:
             return 0.0
+
+    # ── Compatibility Expositions ───────────────────────────────────────────
+
+    def update_prices(self, situation_id: str, prices_dict: dict) -> bool:
+        """Update entry/target/acquirer/etc prices in a special situation."""
+        try:
+            self._mgr.update_situation_prices(situation_id, prices_dict)
+            return True
+        except Exception as e:
+            print(f"[SpecialService] Error updating situation prices for {situation_id}: {e}")
+            return False
+
+    def update_situation(self, situation_id: str, **kwargs) -> bool:
+        """Update fields for a situation."""
+        try:
+            self._mgr.update_situation(situation_id, **kwargs)
+            return True
+        except Exception as e:
+            print(f"[SpecialService] Error updating situation {situation_id}: {e}")
+            return False
+
+    def get_situation(self, situation_id: str) -> Optional[dict]:
+        """Alias for get_by_id."""
+        return self.get_by_id(situation_id)
+
+    def get_all_situations(self) -> list[dict]:
+        """Alias for get_all."""
+        return self.get_all()
+
+    def update_situation_prices(self, situation_id: str, prices_dict: dict) -> bool:
+        """Alias for update_prices."""
+        return self.update_prices(situation_id, prices_dict)
+
+    def delete_situation(self, situation_id: str) -> bool:
+        """Alias for delete."""
+        return self.delete(situation_id)
+
+    def add_situation(self, data: dict) -> Optional[str]:
+        """Alias for add."""
+        return self.add(data)
+
+

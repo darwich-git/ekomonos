@@ -11,7 +11,7 @@ import shutil
 from datetime import datetime
 
 from ui.styles import COLORS
-from core.library_manager import LibraryManager
+from core.services import LibraryService
 from core.sne_manager import generate_sne_filename, SNE_PERIODS, SNE_TYPES
 
 from config import LIBRARY_ROOT as _LIBRARY_ROOT_PATH
@@ -531,7 +531,7 @@ class PdfManagerWidget(QWidget):
     def __init__(self, portfolio_path, embedded=False):
         super().__init__()
         self.portfolio_path = portfolio_path # Keep for scanning initial files
-        self.library_manager = LibraryManager(LIBRARY_ROOT)
+        self.library_manager = LibraryService()
         self.current_filter = "All"
         self.current_year_filter = "All"
         self.embedded = embedded

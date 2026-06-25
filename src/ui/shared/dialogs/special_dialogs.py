@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 from ui.styles import COLORS
-from core.special_manager import SpecialManager
+from core.services import SpecialService
 from core.special_definitions import SITUATION_CATEGORIES, resolve_type
 from core.price_fetcher import EXCHANGE_SUFFIXES
 
@@ -94,7 +94,7 @@ class AddSituationWizard(QDialog):
         # Standardized Size (Matches Company Wizard)
         self.resize(750, 850)
         self.setMinimumWidth(750)
-        self.manager = SpecialManager()
+        self.manager = SpecialService()
         self.created_id = None 
         self.created_status = None 
         

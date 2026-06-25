@@ -10,7 +10,7 @@ import datetime
 import re
 from ui.styles import COLORS
 from core.sne_manager import generate_sne_filename, get_sne_destination_folder, SNE_TYPES, SNE_PERIODS
-from core.companies_manager import CompaniesManager
+from core.services import CompanyService
 from core.price_fetcher import price_fetcher, EXCHANGE_SUFFIXES
 from core.database import init_db, get_session_factory, Company as DBCompany
 from core.earnings_manager import EarningsManager
@@ -135,8 +135,8 @@ class NewCompanyDialog(QDialog):
         else:
             # Fallback: Create local instance to prevent NoneType errors
             # LIBRARY_ROOT is already imported at module level (line 18)
-            from core.companies_manager import CompaniesManager
-            self.companies_manager = CompaniesManager(LIBRARY_ROOT)
+            from core.services import CompanyService
+            self.companies_manager = CompanyService()
         # ============================================================================
         self.setWindowTitle("Create New Company")
         self.resize(750, 850) # Standardized Size
@@ -931,7 +931,8 @@ class InputStockWidget(QWidget):
     def __init__(self, portfolio_manager=None):
         super().__init__()
         self.portfolio_manager = portfolio_manager
-        self.companies_manager = CompaniesManager(LIBRARY_ROOT)
+        from core.services import CompanyService
+        self.companies_manager = CompanyService()
         
         # Init Fortress DB Connection
         self.engine = init_db()
@@ -1173,7 +1174,7 @@ class InputStockWidget(QWidget):
                         blackbox.log(f"Processing Deletion Request for: {ticker_to_delete}")
                         
                         if ticker_to_delete:
-                            manager = CompaniesManager(LIBRARY_ROOT)
+                            manager = CompanyService()
                             success = manager.delete_company(ticker_to_delete)
                             
                             if success:

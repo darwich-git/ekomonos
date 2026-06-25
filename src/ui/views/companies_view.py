@@ -8,7 +8,7 @@ from PyQt6.QtGui import QColor, QFont, QAction, QBrush, QPen
 import json
 import os
 from ui.styles import COLORS
-from core.services import CompanyService, SpecialService
+from core.services import CompanyService, SpecialService, LibraryService
 from core.services.price_service import PriceService
 from core.workers.base_worker import BaseWorker
 from ui.app_state import AppState
@@ -58,17 +58,12 @@ class CompaniesView(QWidget):
         self._company_svc  = CompanyService()
         self._special_svc  = SpecialService()
         self._price_svc    = PriceService()
+        self._lib_svc      = LibraryService()
 
-        # Keep old managers for backward-compat (populate_table still uses them directly)
-        # Will be removed in Phase 3 when we finish the migration
-        from core.companies_manager import CompaniesManager
-        from core.special_manager import SpecialManager
-        self.manager         = self._company_svc._mgr   # alias — same object, no duplicate
-        self.special_manager = self._special_svc._mgr
-
-        # Pre-instantiate LibraryManager ONCE (used in populate_table per row)
-        from core.library_manager import LibraryManager
-        self._lib_mgr = LibraryManager(root_path)
+        # Services act as drop-in replacements for managers
+        self.manager         = self._company_svc
+        self.special_manager = self._special_svc
+        self._lib_mgr        = self._lib_svc
 
         self.setup_ui()
         self.prices = {}

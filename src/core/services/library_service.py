@@ -99,3 +99,18 @@ class LibraryService:
         0 = Unread, 1 = In Progress, 2 = Reviewed (Read)
         """
         return self.update_file_metadata(file_path, ticker, status=status)
+
+    # ── Compatibility Expositions ───────────────────────────────────────────
+
+    def get_company_progress(self, ticker: str) -> tuple[int, dict]:
+        """Alias for get_progress for backward compatibility."""
+        return self.get_progress(ticker)
+
+    def get_company_hours(self, ticker: str) -> float:
+        """Alias for get_hours for backward compatibility."""
+        return self.get_hours(ticker)
+
+    def get_company_links(self, ticker: str) -> list:
+        """Return custom links for a company (default empty list)."""
+        return []
+

@@ -1,5 +1,13 @@
 # Changelog
 
+## [v8.74] - 2026-06-25
+### Changed
+- **Service Layer Consolidation (Pilar 2):** Decoupled all PyQt6 UI views and widgets (including companies_view, pdf_manager, pomodoro, status_panel, and input_stock) from direct Core Managers. They now interact exclusively with the unified CompanyService, LibraryService, and SpecialService layers, resolving direct SQL/manager leaks and promoting a clean 5S architecture.
+
+## [v8.73] - 2026-06-25
+### Added
+- **AI Studio Context Generator:** Created `scripts/prepare_ai_studio_context.py` to compile the entire PyQt6 UI codebase into a single formatted text file. This enables seamless drag-and-drop into Google AI Studio for visual and frontend redesigns.
+
 ## [v8.2.1] - 2026-03-01
 ### Fixed
 - **Missing Account:** Reactivated "Cuenta Formacion Rafa" so it loads properly in the wizard.

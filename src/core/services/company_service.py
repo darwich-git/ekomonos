@@ -157,3 +157,41 @@ class CompanyService:
             print(f"[CompanyService] Rename error from {old_ticker} to {new_ticker}: {e}")
             return False, str(e)
 
+    # ── Compatibility Expositions ───────────────────────────────────────────
+
+    def add_company(self, ticker: str, name: str, category: str, currency: str, 
+                    primary_exchange: str, yahoo_ticker: str, aliases: str, 
+                    notes: str, status: str, last_update: str) -> bool:
+        """Create or update a company."""
+        try:
+            self._mgr.add_company(ticker, name, category, currency, primary_exchange, 
+                                  yahoo_ticker, aliases, notes, status, last_update)
+            return True
+        except Exception as e:
+            print(f"[CompanyService] Error adding company {ticker}: {e}")
+            return False
+
+    def calculate_last_update(self, ticker: str) -> Optional[str]:
+        """Return the latest date of activity for a ticker."""
+        try:
+            return self._mgr.calculate_last_update(ticker)
+        except Exception as e:
+            print(f"[CompanyService] Error calculating last update for {ticker}: {e}")
+            return None
+
+    def sync_with_library(self) -> bool:
+        """Alias for sync_filesystem for backward compatibility."""
+        return self.sync_filesystem()
+
+    def get_companies(self, category: Optional[str] = None) -> list[dict]:
+        """Alias for get_all with optional category filter for compatibility."""
+        if category == "Portfolio":
+            return self.get_portfolio()
+        elif category == "Watchlist":
+            return self.get_watchlist()
+        elif category:
+            return self._mgr.get_companies(category=category)
+        return self.get_all()
+
+
+

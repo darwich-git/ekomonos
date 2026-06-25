@@ -137,10 +137,9 @@ class StatusPanel(QFrame):
         layout.addWidget(self.btn_resume)
         
         # DB connection
-        # Adapting to use LibraryManager directly to share same DB as PdfManager
-        from core.library_manager import LibraryManager
-        from config import LIBRARY_ROOT
-        self.library_manager = LibraryManager(str(LIBRARY_ROOT))
+        # Adapting to use LibraryService directly
+        from core.services import LibraryService
+        self.library_manager = LibraryService()
         self.current_ticker = None
 
     def update_status(self, ticker):

@@ -13,7 +13,7 @@ from PyQt6.QtGui import QIcon, QAction, QDesktopServices, QColor
 import webbrowser
 from ui.widgets.special_tabs.checklist_tab import SituationChecklistWidget
 from core.services.special_service import SpecialService
-from core.special_manager import SpecialManager
+
 from core.special_definitions import (
     SITUATION_TYPES, SITUATION_CATEGORIES, CHECKLIST_GLOBAL, CHECKLIST_BY_TYPE,
     calculate_global_core, calculate_scenario_irr, calculate_xirr, resolve_type
@@ -379,8 +379,8 @@ class SpecialSituationsWidget(QWidget):
     def __init__(self, portfolio_manager):
         super().__init__()
         self.portfolio_manager = portfolio_manager
-        self.manager = SpecialManager() # Legacy calls
         self.service = SpecialService() # New service
+        self.manager = self.service # Drop-in replacement for Legacy calls
         self.current_situation_id = None
         self.current_data = None
         self._all_situations = []
